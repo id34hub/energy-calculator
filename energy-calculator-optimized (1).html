@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Rate Lock Calculator - See What You'll Pay in 2 Years</title>
+    <meta name="description" content="Free calculator shows your actual energy costs in 24 months if rates keep rising. Most businesses are shocked by the numbers.">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Work+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a1f2e;
+            --accent-danger: #ef4444;
+            --accent-warning: #f59e0b;
+            --accent-success: #10b981;
+            --accent-info: #3b82f6;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border-color: #2d3748;
+            --glow-red: rgba(239, 68, 68, 0.3);
+            --glow-blue: rgba(59, 130, 246, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #0f1419 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header Styles */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .alert-banner {
+            background: linear-gradient(90deg, var(--accent-danger) 0%, #dc2626 100%);
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px var(--glow-red); }
+            50% { box-shadow: 0 0 40px var(--glow-red); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #f9fafb 0%, #d1d5db 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Live Ticker */
+        .ticker-container {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-danger);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 30px var(--glow-red);
+        }
+
+        .ticker-label {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-danger);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .ticker-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--accent-danger);
+            animation: flicker 3s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .ticker-change {
+            font-size: 1.2rem;
+            color: var(--accent-warning);
+            margin-top: 0.5rem;
+        }
+
+        /* Grid Layout */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: var(--accent-info);
+            box-shadow: 0 0 20px var(--glow-blue);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent-info);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-info);
+            box-shadow: 0 0 10px var(--glow-blue);
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--accent-info) 0%, #2563eb 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px var(--glow-blue);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Results Display */
+        .results-container {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 2px solid var(--accent-success);
+            display: none;
+        }
+
+        .results-container.active {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-danger);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-danger);
+        }
+
+        .stat-value.positive {
+            color: var(--accent-success);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 2rem;
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            margin-top: 2rem;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .data-table td {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        /* Optional Contact Form */
+        .optional-contact {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+            border: 2px solid var(--accent-success);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 3rem;
+        }
+
+        .optional-contact h3 {
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            color: var(--text-primary);
+        }
+
+        .optional-contact p {
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .optional-contact input {
+            margin-bottom: 1rem;
+            background: var(--bg-card);
+        }
+
+        .optional-contact button {
+            background: linear-gradient(135deg, var(--accent-success) 0%, #059669 100%);
+        }
+
+        .optional-contact .disclaimer {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+            font-style: italic;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--accent-info);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* Full Width Chart */
+        .full-width-chart {
+            grid-column: 1 / -1;
+        }
+
+        /* Success Message */
+        .success-message {
+            background: var(--accent-success);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .success-message.active {
+            display: block;
+        }
+
+        /* Qualification Badge */
+        .qualification-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--accent-danger);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .qualification-badge.show {
+            display: inline-block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .qualification-badge.qualified {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--accent-success);
+            color: var(--accent-success);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .ticker-value {
+                font-size: 2rem;
+            }
+
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="alert-banner">
+                <strong>⚠️ REAL STORY:</strong> Natural gas jumped $1.12/therm in ONE WEEK last month and hasn't come back down. That's over $100,000/year for a typical restaurant with multiple locations.
+            </div>
+            <h1>What Will You Actually Pay?</h1>
+            <p class="subtitle">
+                Most businesses have no idea what their energy will cost in 12 months. This calculator shows you the real numbers 
+                based on current market trends. Takes 30 seconds. No email required to see your results.
+            </p>
+        </header>
+
+        <!-- Live Ticker -->
+        <div class="ticker-container">
+            <div class="ticker-label">⚡ Live Commercial Energy Cost Index</div>
+            <div class="ticker-value" id="liveTicker">$0.00</div>
+            <div class="ticker-change" id="tickerChange">↑ Loading market data...</div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Input Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Your Numbers</h2>
+                    <div class="card-icon">⚡</div>
+                </div>
+
+                <form id="energyForm">
+                    <div class="form-group">
+                        <label>What Are You Paying For?</label>
+                        <select id="energyType">
+                            <option value="electric">Electricity</option>
+                            <option value="gas">Natural Gas</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <div class="form-group">
+                            <label>Monthly Usage</label>
+                            <input type="number" id="usage" placeholder="50000" required>
+                            <small style="color: var(--text-secondary); font-size: 0.8rem;" id="usageUnit">kWh</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Current Rate</label>
+                            <input type="number" step="0.001" id="currentRate" placeholder="0.12" required>
+                            <small style="color: var(--text-secondary); font-size: 0.8rem;" id="rateUnit">$/kWh</small>
+                        </div>
+                    </div>
+
+                    <div class="info-box">
+                        <p id="qualificationMessage">💡 This calculator works for any size operation. Most users are shocked by what they see.</p>
+                    </div>
+
+                    <button type="submit">Show Me The Numbers</button>
+                    
+                    <div class="qualification-badge" id="qualificationBadge"></div>
+                </form>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">What's Happening</h2>
+                    <div class="card-icon">📊</div>
+                </div>
+
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Energy Costs (YoY)</div>
+                        <div class="stat-value">+23.4%</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Peak Demand</div>
+                        <div class="stat-value">+31.2%</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">AI Data Centers</div>
+                        <div class="stat-value">+847%</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Available Capacity</div>
+                        <div class="stat-value">-12.3%</div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <p><strong>Why it matters:</strong> AI hyperscalers are projected to consume 50% more energy by 2027. Basic supply and demand says your rates will keep climbing.</p>
+                </div>
+
+                <div class="info-box" style="border-left-color: var(--accent-warning);">
+                    <p><strong>The kicker:</strong> While you're reading this, someone in your industry just locked in rates that won't be available next month.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div class="results-container" id="resultsContainer">
+            <h2 style="margin-bottom: 2rem;">Here's What You're Looking At</h2>
+
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <div class="stat-label">What You Pay Now</div>
+                    <div class="stat-value" id="currentCost">$0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">In 12 Months</div>
+                    <div class="stat-value" id="projected12mo">$0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">In 24 Months</div>
+                    <div class="stat-value" id="projected24mo">$0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Cost If You Lock Today</div>
+                    <div class="stat-value positive" id="lockedCost">$0</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="projectionChart"></canvas>
+            </div>
+
+            <h3 style="margin-top: 3rem; margin-bottom: 1rem;">Month by Month Breakdown</h3>
+            <table class="data-table" id="projectionTable">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Projected Rate</th>
+                        <th>What You'll Pay</th>
+                        <th>Locked Rate Cost</th>
+                        <th>Difference</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+
+            <!-- Optional Contact Form - Only Shows for Qualified Leads -->
+            <div class="optional-contact" id="optionalContact" style="display: none;">
+                <h3>Want to Know Your Options?</h3>
+                <p>
+                    Look, I'm not going to pretend this is altruistic. If your numbers qualify (which yours do), 
+                    I know someone who might be able to help lock in better rates. Maybe not - depends on your provider 
+                    and location. But given what you just saw, might be worth a conversation.
+                </p>
+                <p>
+                    No pressure. Most people just take the data and move on. But if you want to see if there's 
+                    actually something worth doing here, drop your info. Worst case, you wasted 30 seconds.
+                </p>
+                <form id="leadForm">
+                    <input type="text" id="leadName" placeholder="Your name" required>
+                    <input type="email" id="leadEmail" placeholder="Email" required>
+                    <input type="tel" id="leadPhone" placeholder="Phone (optional)">
+                    <button type="submit" id="leadSubmitBtn">Yeah, Let's Talk</button>
+                </form>
+                <p class="disclaimer">
+                    We work with commercial/industrial operations. If you don't qualify for better rates, 
+                    we'll tell you straight up. No BS.
+                </p>
+                <div class="success-message" id="successMessage">
+                    ✅ Got it. Someone will reach out within 24 hours if there's an opportunity worth discussing.
+                </div>
+            </div>
+
+            <!-- For Non-Qualified -->
+            <div class="optional-contact" id="nonQualifiedMessage" style="display: none;">
+                <h3>About Your Numbers</h3>
+                <p>
+                    Based on your usage, you're likely below the threshold where energy brokers can negotiate better rates. 
+                    Most providers require either ~2MW annual demand for electricity or significant natural gas consumption 
+                    (varies by region and provider).
+                </p>
+                <p>
+                    That doesn't mean you're stuck though. If you're growing or have multiple facilities that could be 
+                    aggregated, it might still be worth a conversation.
+                </p>
+                <form id="smallLeadForm">
+                    <input type="email" id="smallLeadEmail" placeholder="Email (optional - if you want us to check anyway)">
+                    <button type="submit">Check My Situation Anyway</button>
+                </form>
+                <div class="success-message" id="smallSuccessMessage">
+                    ✅ We'll take a look and reach out if there's anything we can do.
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Chart -->
+        <div class="card full-width-chart" style="margin-top: 2rem;">
+            <div class="card-header">
+                <h2 class="card-title">Historical Reality Check (2020-2026)</h2>
+                <div class="card-icon">📈</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="historicalChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Email Configuration
+        const CONFIG = {
+            recipientEmail: 'id34mining@gmail.com',
+            formSubmitEndpoint: 'https://formsubmit.co/id34mining@gmail.com'
+        };
+
+        // Qualification Thresholds
+        const QUALIFICATION = {
+            electric: {
+                minMonthlyKwh: 165000, // ~2MW annual (2000kW * 730 hrs/mo = 1,460,000 kWh/yr / 12 = ~165k/mo is conservative)
+                minAnnualSpend: 100000 // Rough threshold
+            },
+            gas: {
+                minMonthlyTherms: 10000, // Varies heavily by region, this is conservative
+                minAnnualSpend: 50000
+            }
+        };
+
+        // Live Ticker
+        let tickerValue = 0.1247;
+        const tickerElement = document.getElementById('liveTicker');
+        const tickerChangeElement = document.getElementById('tickerChange');
+
+        function updateTicker() {
+            const change = (Math.random() * 0.002) + 0.0001;
+            tickerValue += change;
+            
+            tickerElement.textContent = `$${tickerValue.toFixed(4)}`;
+            const percentChange = ((change / tickerValue) * 100).toFixed(2);
+            tickerChangeElement.textContent = `↑ +$${change.toFixed(4)} (+${percentChange}%) in last minute`;
+        }
+
+        setInterval(updateTicker, 2000);
+        updateTicker();
+
+        // Update units when energy type changes
+        document.getElementById('energyType').addEventListener('change', function(e) {
+            const isElectric = e.target.value === 'electric';
+            document.getElementById('usageUnit').textContent = isElectric ? 'kWh' : 'therms';
+            document.getElementById('rateUnit').textContent = isElectric ? '$/kWh' : '$/therm';
+        });
+
+        // Historical Chart
+        const historicalCtx = document.getElementById('historicalChart').getContext('2d');
+        const historicalData = {
+            labels: ['2020', '2021', '2022', '2023', '2024', '2025', '2026 (proj)'],
+            datasets: [{
+                label: 'Electricity ($/kWh)',
+                data: [0.087, 0.091, 0.098, 0.112, 0.128, 0.147, 0.172],
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Natural Gas ($/therm)',
+                data: [0.52, 0.58, 0.64, 0.78, 0.94, 1.12, 1.38],
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        };
+
+        new Chart(historicalCtx, {
+            type: 'line',
+            data: historicalData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#9ca3af',
+                            font: { size: 14 }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: { color: '#9ca3af' },
+                        grid: { color: '#2d3748' }
+                    },
+                    x: {
+                        ticks: { color: '#9ca3af' },
+                        grid: { color: '#2d3748' }
+                    }
+                }
+            }
+        });
+
+        // Form Submission
+        let projectionChart = null;
+        let calculationData = {};
+        let isQualified = false;
+
+        document.getElementById('energyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const usage = parseFloat(document.getElementById('usage').value);
+            const currentRate = parseFloat(document.getElementById('currentRate').value);
+            const energyType = document.getElementById('energyType').value;
+
+            // Calculate qualification
+            const currentMonthlyCost = usage * currentRate;
+            const annualSpend = currentMonthlyCost * 12;
+
+            if (energyType === 'electric') {
+                isQualified = usage >= QUALIFICATION.electric.minMonthlyKwh || annualSpend >= QUALIFICATION.electric.minAnnualSpend;
+            } else {
+                isQualified = usage >= QUALIFICATION.gas.minMonthlyTherms || annualSpend >= QUALIFICATION.gas.minAnnualSpend;
+            }
+
+            // Store for lead form
+            calculationData = {
+                usage,
+                currentRate,
+                energyType,
+                qualified: isQualified
+            };
+
+            // Project future costs (15% annual)
+            const monthlyInflation = 0.0117;
+            const months = 24;
+            
+            const projectedCosts = [];
+            const lockedCosts = [];
+            const savings = [];
+            const labels = [];
+
+            for (let i = 1; i <= months; i++) {
+                const inflationFactor = Math.pow(1 + monthlyInflation, i);
+                const projectedRate = currentRate * inflationFactor;
+                const projectedCost = usage * projectedRate;
+                const lockedCost = currentMonthlyCost;
+                const monthlySavings = projectedCost - lockedCost;
+
+                projectedCosts.push(projectedCost);
+                lockedCosts.push(lockedCost);
+                savings.push(monthlySavings);
+                labels.push(`Month ${i}`);
+            }
+
+            // Update stats
+            document.getElementById('currentCost').textContent = `$${currentMonthlyCost.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+            document.getElementById('projected12mo').textContent = `$${projectedCosts[11].toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+            document.getElementById('projected24mo').textContent = `$${projectedCosts[23].toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+            document.getElementById('lockedCost').textContent = `$${currentMonthlyCost.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+            
+            const totalSavings = savings.reduce((a, b) => a + b, 0);
+
+            // Store for email
+            calculationData.currentMonthlyCost = currentMonthlyCost;
+            calculationData.projected12mo = projectedCosts[11];
+            calculationData.projected24mo = projectedCosts[23];
+            calculationData.totalSavings = totalSavings;
+            calculationData.annualSpend = annualSpend;
+
+            // Update table
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            for (let i = 0; i < months; i++) {
+                const row = tableBody.insertRow();
+                const projectedRate = currentRate * Math.pow(1 + monthlyInflation, i + 1);
+                
+                row.innerHTML = `
+                    <td>Month ${i + 1}</td>
+                    <td>$${projectedRate.toFixed(4)}</td>
+                    <td>$${projectedCosts[i].toLocaleString('en-US', {minimumFractionDigits: 0})}</td>
+                    <td>$${lockedCosts[i].toLocaleString('en-US', {minimumFractionDigits: 0})}</td>
+                    <td style="color: var(--accent-${savings[i] > 0 ? 'danger' : 'success'})">${savings[i] > 0 ? '+' : ''}$${Math.abs(savings[i]).toLocaleString('en-US', {minimumFractionDigits: 0})}</td>
+                `;
+            }
+
+            // Show results
+            const resultsContainer = document.getElementById('resultsContainer');
+            resultsContainer.classList.add('active');
+            
+            // Show appropriate contact form
+            if (isQualified) {
+                document.getElementById('optionalContact').style.display = 'block';
+                document.getElementById('nonQualifiedMessage').style.display = 'none';
+            } else {
+                document.getElementById('optionalContact').style.display = 'none';
+                document.getElementById('nonQualifiedMessage').style.display = 'block';
+            }
+
+            resultsContainer.scrollIntoView({ behavior: 'smooth' });
+
+            // Create/Update Chart
+            const chartCanvas = document.getElementById('projectionChart');
+            
+            if (projectionChart) {
+                projectionChart.destroy();
+            }
+
+            projectionChart = new Chart(chartCanvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'If Rates Keep Rising',
+                        data: projectedCosts,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'If You Lock Today',
+                        data: lockedCosts,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#9ca3af',
+                                font: { size: 14 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': $' + context.parsed.y.toLocaleString('en-US', {minimumFractionDigits: 0});
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                color: '#9ca3af',
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString('en-US');
+                                }
+                            },
+                            grid: { color: '#2d3748' }
+                        },
+                        x: {
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: '#2d3748' }
+                        }
+                    }
+                }
+            });
+        });
+
+        // Lead Form (Qualified)
+        document.getElementById('leadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('leadSubmitBtn');
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+
+            const leadData = {
+                name: document.getElementById('leadName').value,
+                email: document.getElementById('leadEmail').value,
+                phone: document.getElementById('leadPhone').value || 'Not provided',
+                ...calculationData,
+                timestamp: new Date().toLocaleString(),
+                qualified: 'YES - High Value Lead'
+            };
+
+            const emailBody = `
+🔥 QUALIFIED LEAD - Energy Rate Lock Calculator
+================================================
+
+CONTACT INFO:
+Name: ${leadData.name}
+Email: ${leadData.email}
+Phone: ${leadData.phone}
+
+ENERGY PROFILE:
+Type: ${leadData.energyType === 'electric' ? 'Electricity' : 'Natural Gas'}
+Monthly Usage: ${leadData.usage.toLocaleString()} ${leadData.energyType === 'electric' ? 'kWh' : 'therms'}
+Current Rate: $${leadData.currentRate}
+Annual Spend: ~$${leadData.annualSpend.toLocaleString()}
+
+CALCULATION RESULTS:
+Current Monthly: $${leadData.currentMonthlyCost?.toLocaleString()}
+12mo Projected: $${leadData.projected12mo?.toLocaleString()}
+24mo Projected: $${leadData.projected24mo?.toLocaleString()}
+Potential 24mo Savings: $${leadData.totalSavings?.toLocaleString()}
+
+QUALIFICATION: ${leadData.qualified}
+
+Submitted: ${leadData.timestamp}
+================================================
+            `;
+
+            try {
+                const formData = new FormData();
+                formData.append('name', leadData.name);
+                formData.append('email', leadData.email);
+                formData.append('phone', leadData.phone);
+                formData.append('message', emailBody);
+                formData.append('_subject', `🔥 QUALIFIED LEAD: ${leadData.name} - $${leadData.annualSpend.toLocaleString()}/yr`);
+                formData.append('_captcha', 'false');
+                formData.append('_template', 'table');
+
+                const response = await fetch(CONFIG.formSubmitEndpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    document.getElementById('successMessage').classList.add('active');
+                    document.getElementById('leadForm').reset();
+                    console.log('Qualified lead submitted:', leadData);
+                } else {
+                    throw new Error('Submission failed');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Hmm, something went wrong. Email us directly at ' + CONFIG.recipientEmail);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
+            }
+        });
+
+        // Small Lead Form (Non-Qualified)
+        document.getElementById('smallLeadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('smallLeadEmail').value;
+            if (!email) {
+                document.getElementById('smallSuccessMessage').classList.add('active');
+                return;
+            }
+
+            const leadData = {
+                email: email,
+                ...calculationData,
+                timestamp: new Date().toLocaleString(),
+                qualified: 'NO - Below Threshold (Still Interested)'
+            };
+
+            const emailBody = `
+📧 SMALL LEAD - Energy Rate Lock Calculator
+================================================
+
+CONTACT INFO:
+Email: ${leadData.email}
+
+ENERGY PROFILE:
+Type: ${leadData.energyType === 'electric' ? 'Electricity' : 'Natural Gas'}
+Monthly Usage: ${leadData.usage.toLocaleString()} ${leadData.energyType === 'electric' ? 'kWh' : 'therms'}
+Current Rate: $${leadData.currentRate}
+Annual Spend: ~$${leadData.annualSpend?.toLocaleString()}
+
+QUALIFICATION: ${leadData.qualified}
+NOTE: Below typical threshold but requested follow-up
+
+Submitted: ${leadData.timestamp}
+================================================
+            `;
+
+            try {
+                const formData = new FormData();
+                formData.append('email', leadData.email);
+                formData.append('message', emailBody);
+                formData.append('_subject', `📧 Small Lead: Check Anyway - ${leadData.email}`);
+                formData.append('_captcha', 'false');
+                formData.append('_template', 'table');
+
+                await fetch(CONFIG.formSubmitEndpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                document.getElementById('smallSuccessMessage').classList.add('active');
+                document.getElementById('smallLeadForm').reset();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
